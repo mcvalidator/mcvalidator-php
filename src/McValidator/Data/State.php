@@ -3,8 +3,10 @@
 namespace McValidator\Data;
 
 use Heterogeny\Seq;
+use Heterogeny\Utils;
 use McValidator\Contracts\Pipeable;
 use McValidator\Contracts\Section;
+use McValidator\Data\Error;
 
 class State
 {
@@ -23,17 +25,11 @@ class State
      */
     protected $messages;
 
-    /**
-     * @var mixed
-     */
-    protected $others;
-
-    public function __construct(Pipeable $source, $others = null)
+    public function __construct(Pipeable $source, ?Seq $errors = null, ?Seq $messages = null)
     {
         $this->source = $source;
-        $this->errors = seq();
-        $this->messages = seq();
-        $this->others = $others;
+        $this->errors = $errors ?? seq();
+        $this->messages = $messages ?? seq();
     }
 
     public function addError(Field $field, $message, Section $section)
@@ -85,5 +81,65 @@ class State
     public function getMessages(): Seq
     {
         return $this->messages;
+    }
+
+    public function ignoreErrors(array $path)
+    {
+        $path = Utils::arrayPrepend($path, '$');
+        $joinedPath = join('|', $path);
+
+        $newErrors = $this->errors->filter(function (Error $err) use ($joinedPath) {
+            $fieldPath = join('|', $err->getField()->getPath());
+
+            return strpos($fieldPath, $joinedPath) !== 0;
+        });
+
+        return new State(
+            $this->source,
+            $newErrors,
+            $this->messages
+        );
+    }
+
+    public function ignoreMessages(array $path)
+    {
+        $path = Utils::arrayPrepend($path, '$');
+        $joinedPath = join('|', $path);
+
+        $newMessages = $this->messages->filter(function (Error $err) use ($joinedPath) {
+            $fieldPath = join('|', $err->getField()->getPath());
+
+            return strpos($fieldPath, $joinedPath) !== 0;
+        });
+
+        return new State(
+            $this->source,
+            $this->errors,
+            $newMessages
+        );
+    }
+
+    public function hasError(array $path)
+    {
+        $path = Utils::arrayPrepend($path, '$');
+        $joinedPath = join('|', $path);
+
+        return !$this->errors->filter(function (Error $err) use ($joinedPath) {
+            $fieldPath = join('|', $err->getField()->getPath());
+
+            return strpos($fieldPath, $joinedPath) === 0;
+        })->isEmpty();
+    }
+
+    public function hasMessage(array $path)
+    {
+        $path = Utils::arrayPrepend($path, '$');
+        $joinedPath = join('|', $path);
+
+        return !$this->messages->filter(function (Error $err) use ($joinedPath) {
+            $fieldPath = join('|', $err->getField()->getPath());
+
+            return strpos($fieldPath, $joinedPath) === 0;
+        })->isEmpty();
     }
 }

@@ -3,11 +3,7 @@
 namespace McValidator\Support;
 
 use Heterogeny\Seq;
-use McValidator\Contracts\Pipeable;
 use McValidator\Contracts\Section;
-use McValidator\Data\Field;
-use McValidator\Base;
-use McValidator\Pipe;
 
 class ListOf
 {
@@ -26,14 +22,6 @@ class ListOf
             Section::isValidOrFail($section);
         }
 
-        return new ListOfBuilder(function (Field $field, ?Pipeable $parent) use ($sections): Pipeable {
-            $pipe = new Pipe($field, $parent);
-
-            $section = Base::getSection('rule@is-list-of');
-
-            $pipe->add($section, $sections);
-
-            return $pipe;
-        });
+        return new ListOfBuilder($sections);
     }
 }

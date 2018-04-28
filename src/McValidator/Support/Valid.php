@@ -3,11 +3,7 @@
 namespace McValidator\Support;
 
 use Heterogeny\Seq;
-use McValidator\Contracts\Pipeable;
 use McValidator\Contracts\Section;
-use McValidator\Data\Field;
-use McValidator\Data\SectionDefinition;
-use McValidator\Pipe;
 
 class Valid
 {
@@ -26,8 +22,6 @@ class Valid
             Section::isValidOrFail($section);
         }
 
-        return new ValidBuilder(function (Field $field, ?Pipeable $parent) use ($sections): Pipeable {
-            return Pipe::build($field, $parent, $sections);
-        });
+        return new ValidBuilder($sections);
     }
 }

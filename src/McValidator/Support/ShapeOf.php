@@ -48,20 +48,6 @@ class ShapeOf
         self::validate($options);
         self::validateExtra($sections);
 
-        return new ShapeOfBuilder($options, function (Dict $options, Field $field, ?Pipeable $parent) use ($sections): Pipeable {
-            $pipe = new Pipe($field, $parent);
-
-            if (count($sections) > 0) {
-                $otherPipe = Pipe::build($field, $parent, $sections);
-
-                $pipe->add($otherPipe);
-            }
-
-            $section = Base::getSection('rule@is-shape-of');
-
-            $pipe->add($section, $options);
-
-            return $pipe;
-        });
+        return new ShapeOfBuilder($options, $sections);
     }
 }

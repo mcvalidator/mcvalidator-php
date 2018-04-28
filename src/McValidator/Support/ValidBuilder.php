@@ -5,14 +5,15 @@ namespace McValidator\Support;
 
 use McValidator\Contracts\Pipeable;
 use McValidator\Data\Field;
+use McValidator\Pipe;
 
 class ValidBuilder implements Builder
 {
-    private $builder;
+    private $sections;
 
-    public function __construct(callable $builder)
+    public function __construct($sections)
     {
-        $this->builder = $builder;
+        $this->sections = $sections;
     }
 
     public function build(?Field $field = null, ?Pipeable $parent = null): Pipeable
@@ -21,6 +22,9 @@ class ValidBuilder implements Builder
             $field = new Field('$');
         }
 
-        return ($this->builder)($field, $parent);
+        try {
+            return Pipe::build($field, $parent, $this->sections);
+        } catch (\Exception $e) {
+        }
     }
 }

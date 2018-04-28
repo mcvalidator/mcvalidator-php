@@ -2,4 +2,10 @@
 
 It's always [undefined index] somewhere in PHP
 
+Example 1:
+```php
+use McValidator as MV;
+
+```
+
 __Performance is not guaranteed at this point.__
