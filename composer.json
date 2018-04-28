@@ -1,0 +1,31 @@
+{
+  "name": "mcvalidator/mcvalidator-php",
+  "description": "It's always [undefined index] somewhere in PHP",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Wesley Schleumer",
+      "email": "wesley.schleumer@gmail.com"
+    }
+  ],
+  "require": {
+    "heterogeny/heterogeny-php": ">=0.0.0 <1.0.0",
+    "symfony/yaml": "^4.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "5.7.*"
+  },
+  "scripts": {
+    "test": [
+      "vendor/bin/phpunit --verbose"
+    ]
+  },
+  "autoload": {
+    "psr-4": {
+      "McValidator\\": "src/McValidator/"
+    },
+    "files": [
+      "src/McValidator/helpers.php"
+    ]
+  }
+}
