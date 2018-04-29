@@ -4,17 +4,10 @@ namespace McValidator\Data;
 
 use Heterogeny\Seq;
 use Heterogeny\Utils;
-use McValidator\Contracts\Pipeable;
 use McValidator\Contracts\Section;
-use McValidator\Data\Error;
 
 class State
 {
-    /**
-     * @var Pipeable
-     */
-    protected $source;
-
     /**
      * @var \Heterogeny\Seq
      */
@@ -25,9 +18,8 @@ class State
      */
     protected $messages;
 
-    public function __construct(Pipeable $source, ?Seq $errors = null, ?Seq $messages = null)
+    public function __construct(?Seq $errors = null, ?Seq $messages = null)
     {
-        $this->source = $source;
         $this->errors = $errors ?? seq();
         $this->messages = $messages ?? seq();
     }
@@ -39,6 +31,8 @@ class State
             $message,
             $section
         ));
+
+        return $this;
     }
 
     public function merge(State $other)
@@ -52,25 +46,14 @@ class State
     public function prefixWith(Field $parent)
     {
         $this->errors = $this->errors->map(function (Error $error) use ($parent) {
-            $field = $error->getField()->setParent($parent);
+            $errorField = $error->getField();
+
+            $field = $errorField->setParent($parent);
 
             return $error->setField($field);
         });
 
         return $this;
-    }
-
-    public function getOthers()
-    {
-        return $this->others;
-    }
-
-    /**
-     * @return Pipeable
-     */
-    public function getSource(): Pipeable
-    {
-        return $this->source;
     }
 
     public function getErrors(): Seq
@@ -95,7 +78,6 @@ class State
         });
 
         return new State(
-            $this->source,
             $newErrors,
             $this->messages
         );
@@ -113,7 +95,6 @@ class State
         });
 
         return new State(
-            $this->source,
             $this->errors,
             $newMessages
         );

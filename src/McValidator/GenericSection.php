@@ -34,11 +34,11 @@ final class GenericSection extends Section implements \Serializable
      * @param State $state
      * @return Capsule
      */
-    protected function receive(Capsule $capsule, State $state)
+    protected function receive(Capsule $capsule)
     {
         $fn = $this->fn;
 
-        return $fn($capsule, $state);
+        return $fn($capsule);
     }
 
     /**

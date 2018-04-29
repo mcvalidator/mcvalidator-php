@@ -4,6 +4,7 @@
 namespace McValidator\Contracts;
 
 use McValidator\Data\Capsule;
+use McValidator\Data\InvalidValue;
 use McValidator\Data\OptionsBag;
 use McValidator\Data\SectionDefinition;
 use McValidator\Data\State;
@@ -16,10 +17,19 @@ abstract class Section
      */
     protected $identifier;
 
+    /**
+     * @var Builder
+     */
+    protected $validation = null;
+
     public function __construct($identifier)
     {
         $this->identifier = $identifier;
+
+        $this->setup();
     }
+
+    protected function setup() { }
 
     /**
      * @return string
@@ -49,16 +59,36 @@ abstract class Section
      * @param State $state
      * @return Capsule
      */
-    abstract protected function receive(Capsule $capsule, State $state);
+    abstract protected function receive(Capsule $capsule);
 
     /**
      * @param Capsule $capsule
      * @param State $state
      * @return Capsule
      */
-    public function evaluate(Capsule $capsule, State $state)
+    public function evaluate(Capsule $capsule)
     {
-        return $this->receive($capsule, $state);
+        if ($this->validation) {
+            $validator = $this->validation->build(
+                $capsule->getField(),
+                $capsule->getSource()
+            );
+
+            $newValue = $validator->pump(
+                $capsule->getValue(),
+                $capsule->getState()
+            );
+
+            if ($newValue instanceof InvalidValue) {
+                return $capsule
+                    ->newValue($newValue);
+            } else {
+                $capsule = $capsule
+                    ->newValue($newValue);
+            }
+        }
+
+        return $this->receive($capsule);
     }
 
     /**

@@ -10,7 +10,7 @@ class Test extends TestCase
         // creates a quick section on namespace filter called merge
         // closure sections is not encouraged since it will make
         // serialization slow
-        \McValidator\Base::create('filter', 'merge', function (\McValidator\Data\Capsule $capsule, \McValidator\Data\State $state) {
+        \McValidator\Base::create('filter', 'merge', function (\McValidator\Data\Capsule $capsule) {
             $new = $capsule->getOptions()->getValue();
 
             return $capsule->newValue(function ($value) use ($new) {
@@ -27,14 +27,14 @@ class Test extends TestCase
         // creates a quick section on namespace filter called filter
         // closure sections is not encouraged since it will make
         // serialization slow
-        \McValidator\Base::create('filter', 'replace', function (\McValidator\Data\Capsule $capsule, \McValidator\Data\State $state) {
+        \McValidator\Base::create('filter', 'replace', function (\McValidator\Data\Capsule $capsule) {
             return $capsule->newValue($capsule->getOptions()->getValue());
         });
 
         // creates a quick section on namespace filter called truncate
         // closure sections is not encouraged since it will make
         // serialization slow
-        \McValidator\Base::create('filter', 'truncate', function (\McValidator\Data\Capsule $capsule, \McValidator\Data\State $state) {
+        \McValidator\Base::create('filter', 'truncate', function (\McValidator\Data\Capsule $capsule) {
             $limit = $capsule->getOptions()->getOrElse('limit', 10);
             $end = $capsule->getOptions()->getOrElse('end', '...');
 
@@ -184,6 +184,7 @@ c:
   - rule/is-string
 YAML;
 
+        /** @var MV\Support\Builder $validators */
         $validators = McValidator\Parser\Yaml::parseSingle($yml);
 
         $this->assertInstanceOf(MV\Support\ShapeOfBuilder::class, $validators);
@@ -230,7 +231,8 @@ c: !shape-of
   d: !shape-of
     e: !shape-of
       f: rule/is-string
-g: filter/to-string
+g: filter/to-int
+h: filter/to-int
 YAML;
 
         $validators = McValidator\Parser\Yaml::parseSingle($yml);
@@ -262,7 +264,8 @@ YAML;
                     ])
                 ])
             ]),
-            'g' => 10
+            'g' => '10',
+            'h' => 'hhhhhh'
         ]));
 
         $state = $result->getState();
@@ -271,6 +274,7 @@ YAML;
 
         $hasBError = $newState->hasError(['b']);
         $hasFError = $newState->hasError(['f']);
+        $hasHError = $newState->hasError(['h']);
 
         $this->assertTrue($hasBError);
 
@@ -280,6 +284,6 @@ YAML;
 
         $value = $result->get()->all();
 
-        $this->assertArraySubset(['a' => 'verylongwo…'], $value);
+        $this->assertArraySubset(['a' => 'verylongwo…', 'g' => 10], $value);
     }
 }

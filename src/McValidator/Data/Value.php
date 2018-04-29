@@ -28,6 +28,10 @@ class Value
      */
     public function __construct($value, $oldValue = null, ?State $state = null)
     {
+        if ($state === null) {
+            $state = new State();
+        }
+
         if ($oldValue !== null && !$oldValue instanceof Value) {
             $oldValue = new Value($oldValue, null, $state);
         }

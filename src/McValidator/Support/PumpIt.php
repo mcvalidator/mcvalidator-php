@@ -9,14 +9,10 @@ trait PumpIt
 {
     public function pump($value, ?State $state = null): Value
     {
-        if (!$state) {
-            $state = new State($this);
-        }
-
         if (!$value instanceof Value) {
             $value = new Value($value, null, $state);
         }
 
-        return $this->receive($value, $state);
+        return $this->receive($value);
     }
 }

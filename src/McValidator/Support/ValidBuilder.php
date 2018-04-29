@@ -16,15 +16,18 @@ class ValidBuilder implements Builder
         $this->sections = $sections;
     }
 
+    /**
+     * @param Field|null $field
+     * @param Pipeable|null $parent
+     * @return Pipeable
+     * @throws \Exception
+     */
     public function build(?Field $field = null, ?Pipeable $parent = null): Pipeable
     {
         if ($field === null) {
             $field = new Field('$');
         }
 
-        try {
-            return Pipe::build($field, $parent, $this->sections);
-        } catch (\Exception $e) {
-        }
+        return Pipe::build($field, $parent, $this->sections);
     }
 }
