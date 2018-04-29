@@ -10,8 +10,8 @@ use McValidator\Data\Capsule;
 use McValidator\Data\Field;
 use McValidator\Data\OptionsBag;
 use McValidator\Data\SectionDefinition;
-use McValidator\Pipe;
 use McValidator\Data\State;
+use McValidator\Pipe;
 use McValidator\Support\Builder;
 
 class IsListOf extends Section
@@ -42,22 +42,23 @@ class IsListOf extends Section
      * @return $this|Capsule
      * @throws \Exception
      */
-    protected function receive(Capsule $capsule, State $state)
+    protected function receive(Capsule $capsule)
     {
         /** @var array $options */
         $sections = $capsule->getOptions()->getValue();
 
-        /** @var Pipeable $source */
-        $source = $capsule->getSource();
-
         /** @var Seq $values */
         $values = $capsule->getValue()->get();
+
         if ($values === null) {
             $values = seq();
         }
 
         /** @var Field $parentField */
         $parentField = $capsule->getField();
+
+        /** @var State $state */
+        $state = $capsule->getState();
 
         if (!$values instanceof Seq) {
             $type = gettype($values);
@@ -68,23 +69,26 @@ class IsListOf extends Section
 
         $pipe = Pipe::build($field, null, $sections);
 
-        $listState = new State($source);
+        $listState = new State();
 
-        $result = $values->mapWithIndex(function ($key, $value) use ($parentField, $pipe, $source, $listState, $state) {
+        $result = seq();
+
+        foreach ($values as $key => $value) {
             $actualField = new Field($key, $parentField);
 
-            $innerState = new State($source);
+            $value = $pipe->pump($value, new State());
 
-            $value = $pipe->pump($value, $innerState);
+            $listState = $listState->merge(
+                $value
+                    ->getState()
+                    ->prefixWith($actualField)
+            );
 
-            $innerState->prefixWith($actualField);
-            $listState->merge($innerState);
+            $result = $result->append($value);
+        }
 
-            return $value;
-        });
-
-        $state->merge($listState);
-
-        return $capsule->newValue($result);
+        return $capsule
+            ->newValue($result)
+            ->setState($state->merge($listState));
     }
 }

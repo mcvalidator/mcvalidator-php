@@ -73,4 +73,28 @@ final class Field
 
         return [$this->name];
     }
+
+    public function noRoot()
+    {
+        if ($this->isRoot()) {
+            return null;
+        }
+
+        if ($this->parent === null) {
+            return $this;
+        }
+
+        if ($this->parent !== null && $this->parent->isRoot()) {
+            $this->parent = null;
+        } else {
+            $this->parent = $this->parent->noRoot();
+        }
+
+        return $this;
+    }
+
+    public function isRoot()
+    {
+        return $this->name === '$';
+    }
 }

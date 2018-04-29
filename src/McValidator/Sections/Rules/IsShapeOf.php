@@ -12,6 +12,7 @@ use McValidator\Data\Field;
 use McValidator\Data\NonExistentValue;
 use McValidator\Data\OptionsBag;
 use McValidator\Data\State;
+use McValidator\Data\Value;
 use McValidator\Pipe;
 
 class IsShapeOf extends Section
@@ -36,13 +37,16 @@ class IsShapeOf extends Section
      * @return $this|Capsule
      * @throws \Exception
      */
-    protected function receive(Capsule $capsule, State $state)
+    protected function receive(Capsule $capsule)
     {
         /** @var Dict $keys */
         $keys = $capsule->getOptions()->getValue();
 
         /** @var Pipeable $source */
         $source = $capsule->getSource();
+
+        /** @var State $state */
+        $state = $capsule->getState();
 
         /** @var Seq $values */
         $values = $capsule->getValue()->get();
@@ -69,20 +73,29 @@ class IsShapeOf extends Section
             return $pipe;
         });
 
-        $innerState = new State($source);
+        $innerState = new State();
+        $result = \dict();
 
-        $result = $pipeMap->map(function ($key, Pipe $pipe) use ($values, $innerState, $state) {
-            $value = $values->getOrElse($key, new NonExistentValue());
+        /**
+         * @var string $key
+         * @var Pipe $pipe
+         */
+        foreach ($pipeMap as $key => $pipe) {
+            /** @var Value $value */
+            $value = $values->getOrElse(
+                $key,
+                new NonExistentValue($innerState)
+            );
 
-            if ($value instanceof NonExistentValue) {
-                return $pipe->pump(null, $innerState);
-            }
+            $value = $pipe->pump($value, $innerState);
 
-            return $pipe->pump($value, $innerState);
-        });
+            $result = $result->set($key, $value);
 
-        $state->merge($innerState);
+            $innerState = $value->getState();
+        }
 
-        return $capsule->newValue($result);
+        return $capsule
+            ->newValue($result)
+            ->setState($state->merge($innerState));
     }
 }

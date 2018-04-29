@@ -7,7 +7,10 @@ class Test extends TestCase
 {
     public static function setUpBeforeClass()
     {
-        \McValidator\Base::createFilter('merge', function (\McValidator\Data\Capsule $capsule, \McValidator\Data\State $state) {
+        // creates a quick section on namespace filter called merge
+        // closure sections is not encouraged since it will make
+        // serialization slow
+        \McValidator\Base::create('filter', 'merge', function (\McValidator\Data\Capsule $capsule) {
             $new = $capsule->getOptions()->getValue();
 
             return $capsule->newValue(function ($value) use ($new) {
@@ -21,11 +24,17 @@ class Test extends TestCase
             });
         });
 
-        \McValidator\Base::createFilter('replace', function (\McValidator\Data\Capsule $capsule, \McValidator\Data\State $state) {
+        // creates a quick section on namespace filter called filter
+        // closure sections is not encouraged since it will make
+        // serialization slow
+        \McValidator\Base::create('filter', 'replace', function (\McValidator\Data\Capsule $capsule) {
             return $capsule->newValue($capsule->getOptions()->getValue());
         });
 
-        \McValidator\Base::createFilter('truncate', function (\McValidator\Data\Capsule $capsule, \McValidator\Data\State $state) {
+        // creates a quick section on namespace filter called truncate
+        // closure sections is not encouraged since it will make
+        // serialization slow
+        \McValidator\Base::create('filter', 'truncate', function (\McValidator\Data\Capsule $capsule) {
             $limit = $capsule->getOptions()->getOrElse('limit', 10);
             $end = $capsule->getOptions()->getOrElse('end', '...');
 
@@ -41,9 +50,9 @@ class Test extends TestCase
     public function test1()
     {
         $builder = MV\valid(
-            MV\section('filter@replace', 20),
-            MV\section('filter@replace', 30),
-            MV\section('filter@replace', 40)
+            MV\section('filter/replace', 20),
+            MV\section('filter/replace', 30),
+            MV\section('filter/replace', 40)
         );
 
         $validator = $builder->build();
@@ -69,14 +78,14 @@ class Test extends TestCase
     {
         $builder = MV\shape_of([
             'a' => MV\valid(
-                MV\section('filter@replace', 20),
-                MV\section('filter@replace', 30),
-                MV\section('filter@replace', 40)
+                MV\section('filter/replace', 20),
+                MV\section('filter/replace', 30),
+                MV\section('filter/replace', 40)
             ),
             // when merging you need to defined the values which will be merge,
             // mcvalidator wont let foreign data to stay on its values.
-            'b' => MV\section('rule@is-string')
-        ], MV\section('filter@merge', dict(['b' => 'c'])));
+            'b' => MV\section('rule/is-string')
+        ], MV\section('filter/merge', dict(['b' => 'c'])));
 
         $validator = $builder->build();
 
@@ -100,9 +109,9 @@ class Test extends TestCase
             'a' => MV\shape_of([
                 'b' => MV\shape_of([
                     'c' => MV\list_of(
-                        MV\section('filter@replace', 20),
-                        MV\section('filter@replace', 30),
-                        MV\section('filter@replace', 40)
+                        MV\section('filter/replace', 20),
+                        MV\section('filter/replace', 30),
+                        MV\section('filter/replace', 40)
                     )
                 ])
             ])
@@ -143,7 +152,7 @@ class Test extends TestCase
 
     public function testYaml()
     {
-        $yml = "- rule@is-string";
+        $yml = "- rule/is-string";
         $validator = McValidator\Parser\Yaml::parseSingle($yml);
 
         $this->assertInstanceOf(MV\Support\ValidBuilder::class, $validator);
@@ -160,21 +169,22 @@ class Test extends TestCase
         $yml = <<<YAML
 !shape-of
 _:
-  filter@merge:
+  filter/merge:
     c: "20"
 a:
-  - rule@is-string 
-  - filter@truncate:
+  - rule/is-string 
+  - filter/truncate:
       limit: 10
       end: …
 b:
-  - filter@to-string:
-  - rule@is-string:
+  - filter/to-string
+  - rule/is-string
 
 c:
-  - rule@is-string
+  - rule/is-string
 YAML;
 
+        /** @var MV\Support\Builder $validators */
         $validators = McValidator\Parser\Yaml::parseSingle($yml);
 
         $this->assertInstanceOf(MV\Support\ShapeOfBuilder::class, $validators);
@@ -203,5 +213,137 @@ YAML;
         $value = $result->get()->all();
 
         $this->assertEquals(['a' => 'verylongwo…', 'c' => '20'], $value);
+    }
+
+    public function testSerialization()
+    {
+        $yml = <<<YAML
+!shape-of
+a:
+  - rule/is-string 
+  - filter/truncate:
+      limit: 10
+      end: …
+b:
+  - filter/to-string
+  - rule/is-string
+c: !shape-of
+  d: !shape-of
+    e: !shape-of
+      f: rule/is-string
+g: filter/to-int
+h: filter/to-int
+YAML;
+
+        $validators = McValidator\Parser\Yaml::parseSingle($yml);
+
+        $this->assertInstanceOf(MV\Support\ShapeOfBuilder::class, $validators);
+
+        $validator = $validators->build();
+
+        $serializedValidator = serialize($validator);
+
+        $validator = unserialize($serializedValidator);
+
+        $this->assertInstanceOf(MV\Contracts\Pipeable::class, $validator);
+
+        /** @var MV\Data\Value $result */
+        $result = $validator->pump(dict([
+            'a' => 'verylongword',
+            'b' => dict([
+                'c' => dict([
+                    'd' => dict([
+                        'e' => 10
+                    ])
+                ])
+            ]),
+            'c' => dict([
+                'd' => dict([
+                    'e' => dict([
+                        'f' => 10
+                    ])
+                ])
+            ]),
+            'g' => '10',
+            'h' => 'hhhhhh'
+        ]));
+
+        $state = $result->getState();
+
+        $newState = $state->ignoreErrors(['c']);
+
+        $hasBError = $newState->hasError(['b']);
+        $hasFError = $newState->hasError(['f']);
+        $hasHError = $newState->hasError(['h']);
+
+        $this->assertTrue($hasBError);
+        $this->assertTrue($hasHError);
+
+        // f must not be present in errors because it belongs to
+        // [c, d, e]
+        $this->assertFalse($hasFError);
+
+        $value = $result->get()->all();
+
+        $this->assertArraySubset(['a' => 'verylongwo…', 'g' => 10], $value);
+    }
+
+    public function testMore(): void
+    {
+        $yml = <<<YAML
+!shape-of
+a: !shape-of
+  b: filter/to-int
+c: !list-of
+  - !shape-of
+      d: filter/to-int
+e: !list-of
+  - filter/to-int
+f: !shape-of
+  g: !shape-of
+    h: !shape-of
+      i: !shape-of
+        j: filter/to-int
+YAML;
+
+        /** @var MV\Support\Builder $validators */
+        $validators = MV\Parser\Yaml::parseSingle($yml);
+
+        $validator = $validators->build();
+
+        $result = $validator->pump(dict([
+            'a' => dict([
+                'b' => 'hhhhhhhhhh'
+            ]),
+            'c' => seq(dict([
+                'd' => 'hhhhhhhhhhhh'
+            ])),
+            'e' => seq('hhhhhhhhhhhh'),
+            'f' => dict([
+                'g' => dict([
+                    'h' => dict([
+                        'i' => dict([
+                            'j' => 'hhhhhhhhhh'
+                        ])
+                    ])
+                ])
+            ])
+        ]));
+
+        $state = $result->getState();
+
+        $hasAError = $state->hasError(['a', 'b']);
+        $hasCError = $state->hasError(['c', 0, 'd']);
+        $hasEError = $state->hasError(['e', 0]);
+        $hasFError = $state->hasError(['f', 'g', 'h', 'i', 'j']);
+
+        $hasZError = $state->hasError(['a', 'b', 'z']);
+
+        $this->assertTrue($hasAError);
+        $this->assertTrue($hasCError);
+        $this->assertTrue($hasEError);
+        $this->assertTrue($hasFError);
+
+        $this->assertFalse($hasZError);
     }
 }

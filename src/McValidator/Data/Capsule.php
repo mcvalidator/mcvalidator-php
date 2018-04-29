@@ -5,8 +5,8 @@ namespace McValidator\Data;
 
 
 use McValidator\Contracts\Pipeable;
+use McValidator\Contracts\Section;
 use McValidator\Contracts\Splitter;
-use McValidator\Data\State;
 
 final class Capsule
 {
@@ -43,17 +43,18 @@ final class Capsule
      * @param OptionsBag $options
      * @param State $state
      */
-    public function __construct($value, $source, $field, OptionsBag $options, State $state)
+    public function __construct($value, $source, $field, OptionsBag $options)
     {
         $this->value = $value;
         $this->source = $source;
         $this->field = $field;
         $this->options = $options;
-        $this->state = $state;
+        $this->state = $value->getState();
     }
 
     /**
      * @param Value $value
+     * @param State $state
      * @param Splitter $splitter
      * @return Capsule
      */
@@ -63,18 +64,26 @@ final class Capsule
             $value,
             $splitter->getPipe(),
             $splitter->getField(),
-            $splitter->getOptions(),
-            $value->getState()
+            $splitter->getOptions()
         );
     }
 
-    public function newValue($value)
+    public function newValue($value, ?State $state = null)
     {
+        if ($value instanceof Value) {
+            $this->value = $value;
+            $this->state = $value->getState();
+
+            return $this;
+        }
+
+        $nextState = $this->state;
+
         if (!$value instanceof \Closure) {
             $this->value = new Value(
                 $value,
                 $this->value,
-                $this->state
+                $nextState
             );
 
             return $this;
@@ -83,7 +92,7 @@ final class Capsule
         $this->value = new Value(
             $value($this->value->get()),
             $this->value,
-            $this->state
+            $nextState
         );
 
         return $this;
@@ -140,8 +149,16 @@ final class Capsule
      */
     public function setState(State $state): Capsule
     {
+        $this->value = $this->value->setState($state);
+
         $this->state = $state;
 
         return $this;
+    }
+
+    public function addError($message, Section $section) {
+        return $this->setState(
+          $this->state->addError($this->getField(), $message, $section)
+        );
     }
 }

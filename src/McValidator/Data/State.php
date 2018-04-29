@@ -3,16 +3,11 @@
 namespace McValidator\Data;
 
 use Heterogeny\Seq;
-use McValidator\Contracts\Pipeable;
+use Heterogeny\Utils;
 use McValidator\Contracts\Section;
 
 class State
 {
-    /**
-     * @var Pipeable
-     */
-    protected $source;
-
     /**
      * @var \Heterogeny\Seq
      */
@@ -23,17 +18,10 @@ class State
      */
     protected $messages;
 
-    /**
-     * @var mixed
-     */
-    protected $others;
-
-    public function __construct(Pipeable $source, $others = null)
+    public function __construct(?Seq $errors = null, ?Seq $messages = null)
     {
-        $this->source = $source;
-        $this->errors = seq();
-        $this->messages = seq();
-        $this->others = $others;
+        $this->errors = $errors ?? seq();
+        $this->messages = $messages ?? seq();
     }
 
     public function addError(Field $field, $message, Section $section)
@@ -43,6 +31,8 @@ class State
             $message,
             $section
         ));
+
+        return $this;
     }
 
     public function merge(State $other)
@@ -56,25 +46,18 @@ class State
     public function prefixWith(Field $parent)
     {
         $this->errors = $this->errors->map(function (Error $error) use ($parent) {
-            $field = $error->getField()->setParent($parent);
+            $errorField = $error->getField()->noRoot();
+
+            if ($errorField === null) {
+                return $error->setField($parent);
+            }
+
+            $field = $errorField->setParent($parent);
 
             return $error->setField($field);
         });
 
         return $this;
-    }
-
-    public function getOthers()
-    {
-        return $this->others;
-    }
-
-    /**
-     * @return Pipeable
-     */
-    public function getSource(): Pipeable
-    {
-        return $this->source;
     }
 
     public function getErrors(): Seq
@@ -85,5 +68,63 @@ class State
     public function getMessages(): Seq
     {
         return $this->messages;
+    }
+
+    public function ignoreErrors(array $path)
+    {
+        $path = Utils::arrayPrepend($path, '$');
+        $joinedPath = join('|', $path);
+
+        $newErrors = $this->errors->filter(function (Error $err) use ($joinedPath) {
+            $fieldPath = join('|', $err->getField()->getPath());
+
+            return strpos($fieldPath, $joinedPath) !== 0;
+        });
+
+        return new State(
+            $newErrors,
+            $this->messages
+        );
+    }
+
+    public function ignoreMessages(array $path)
+    {
+        $path = Utils::arrayPrepend($path, '$');
+        $joinedPath = join('|', $path);
+
+        $newMessages = $this->messages->filter(function (Error $err) use ($joinedPath) {
+            $fieldPath = join('|', $err->getField()->getPath());
+
+            return strpos($fieldPath, $joinedPath) !== 0;
+        });
+
+        return new State(
+            $this->errors,
+            $newMessages
+        );
+    }
+
+    public function hasError(array $path)
+    {
+        $path = Utils::arrayPrepend($path, '$');
+        $joinedPath = join('|', $path);
+
+        return !$this->errors->filter(function (Error $err) use ($joinedPath) {
+            $fieldPath = join('|', $err->getField()->getPath());
+
+            return strpos($fieldPath, $joinedPath) === 0;
+        })->isEmpty();
+    }
+
+    public function hasMessage(array $path)
+    {
+        $path = Utils::arrayPrepend($path, '$');
+        $joinedPath = join('|', $path);
+
+        return !$this->messages->filter(function (Error $err) use ($joinedPath) {
+            $fieldPath = join('|', $err->getField()->getPath());
+
+            return strpos($fieldPath, $joinedPath) === 0;
+        })->isEmpty();
     }
 }

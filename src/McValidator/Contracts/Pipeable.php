@@ -43,7 +43,10 @@ abstract class Pipeable implements Pumps
         }
 
         if ($parent instanceof Pipeable) {
-            $field->setParent($parent->getField());
+            // This will avoid circular references
+            if ($field !== $parent->getField()) {
+                $field->setParent($parent->getField());
+            }
         }
 
         $this->field = $field;

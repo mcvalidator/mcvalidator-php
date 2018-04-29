@@ -6,7 +6,7 @@ namespace McValidator\Sections\Rules;
 use McValidator\Contracts\Section;
 use McValidator\Data\Capsule;
 
-class IsString extends Section
+class IsInt extends Section
 {
     /**
      * @param Capsule $capsule
@@ -15,8 +15,8 @@ class IsString extends Section
      */
     protected function receive(Capsule $capsule)
     {
-        if (!is_string($capsule->getValue()->get())) {
-            throw new \Exception("Value is not a string");
+        if (!is_numeric($capsule->getValue()->get())) {
+            throw new \Exception("Value is not an integer");
         }
 
         return $capsule;

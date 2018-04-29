@@ -8,7 +8,6 @@ use McValidator\Data\Capsule;
 use McValidator\Data\Field;
 use McValidator\Data\OptionsBag;
 use McValidator\Data\Value;
-use McValidator\Data\State;
 use McValidator\Support\PumpIt;
 
 /**
@@ -83,20 +82,32 @@ final class Splitter implements Pumps
         return $this->pipe;
     }
 
-    function receive(Value $value, State $state): Value
+    /**
+     * @param Value $value
+     * @return Value
+     * @throws \Exception
+     */
+    function receive(Value $value): Value
     {
         if ($this->wrapped instanceof Section) {
             $capsule = Capsule::fromSectionWrapper($value, $this);
 
             try {
-                return $this->wrapped->evaluate($capsule, $state)->getValue();
-            } catch (\Exception $ex) {
-                $state->addError($capsule->getField(), $ex->getMessage(), $this->wrapped);
+                $result = $this
+                    ->wrapped
+                    ->evaluate($capsule);
 
-                return $value->invalid();
+                return $result->getValue();
+            } catch (\Exception $ex) {
+                $capsule = $capsule->addError(
+                    $ex->getMessage(),
+                    $this->wrapped
+                );
+
+                return $capsule->getValue()->invalid();
             }
         } elseif ($this->wrapped instanceof Pipeable) {
-            return $this->wrapped->pump($value, $state);
+            return $this->wrapped->pump($value);
         }
 
         throw new \Exception("Unexpected result on `Splitter`");

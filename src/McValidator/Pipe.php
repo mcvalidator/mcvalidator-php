@@ -8,7 +8,6 @@ use McValidator\Contracts\Pipeable;
 use McValidator\Contracts\Splitter;
 use McValidator\Data\Field;
 use McValidator\Data\SectionDefinition;
-use McValidator\Data\State;
 use McValidator\Data\Value;
 use McValidator\Support\Builder;
 
@@ -25,7 +24,9 @@ final class Pipe extends Pipeable
 
     public function add($section, $options = null)
     {
-        $this->sections = $this->sections->append(new Splitter($this->field, $this, $section, $options));
+        $this->sections = $this
+            ->sections
+            ->append(new Splitter($this->field, $this, $section, $options));
 
         return $this;
     }
@@ -39,11 +40,13 @@ final class Pipe extends Pipeable
         return $this;
     }
 
-    function receive(Value $value, State $state): Value
+    function receive(Value $value): Value
     {
-        return $this->sections->foldLeft(function ($value, Splitter $item) use ($state) {
-            return $item->receive($value, $state);
+        $result = $this->sections->foldLeft(function ($value, Splitter $item) {
+            return $item->receive($value);
         }, $value);
+
+        return $result;
     }
 
     /**

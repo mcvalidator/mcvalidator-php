@@ -10,10 +10,8 @@
   ],
   "require": {
     "heterogeny/heterogeny-php": ">=0.0.0 <1.0.0",
-    "symfony/yaml": "^4.0"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "5.7.*"
+    "symfony/yaml": "^4.0",
+    "jeremeamia/SuperClosure": "^2.4"
   },
   "scripts": {
     "test": [
@@ -27,5 +25,8 @@
     "files": [
       "src/McValidator/helpers.php"
     ]
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^7.1"
   }
 }

@@ -10,6 +10,8 @@ use McValidator\Support\Str;
  */
 final class Base
 {
+    public static $namespaceSeparator = '/';
+
     /**
      * @var Section[]
      */
@@ -20,7 +22,7 @@ final class Base
         'rule' => ['McValidator\\Sections\\Rules\\']
     ];
 
-    public static function createSection($name, callable $fn)
+    private static function createSection($name, callable $fn)
     {
         $section = new GenericSection($name, $fn);
 
@@ -34,19 +36,9 @@ final class Base
      * @param callable $fn
      * @return GenericSection
      */
-    public static function createRule($name, callable $fn)
+    public static function create($namespace, $name, callable $fn)
     {
-        return self::createSection("rule@$name", $fn);
-    }
-
-    /**
-     * @param $name
-     * @param callable $fn
-     * @return GenericSection
-     */
-    public static function createFilter($name, callable $fn)
-    {
-        return self::createSection("filter@$name", $fn);
+        return self::createSection($namespace . self::$namespaceSeparator . $name, $fn);
     }
 
     public static function appendClassPath($namespace, $prefix)
@@ -133,7 +125,7 @@ final class Base
         }
 
         if ($result === null) {
-            $split = explode("@", $section);
+            $split = explode(self::$namespaceSeparator, $section);
             if (count($split) === 2) {
                 list($namespace, $alias) = $split;
 
@@ -146,6 +138,11 @@ final class Base
         }
 
         return $result;
+    }
+
+    public static function name($namespace, $name)
+    {
+        return $namespace . self::$namespaceSeparator . $name;
     }
 
 }

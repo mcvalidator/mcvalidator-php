@@ -3,24 +3,38 @@
 
 namespace McValidator\Support;
 
+use McValidator\Base;
 use McValidator\Contracts\Pipeable;
 use McValidator\Data\Field;
+use McValidator\Pipe;
 
 class ListOfBuilder implements Builder
 {
-    private $builder;
+    private $sections;
 
-    public function __construct(callable $builder)
+    public function __construct($sections)
     {
-        $this->builder = $builder;
+        $this->sections = $sections;
     }
 
+    /**
+     * @param Field|null $field
+     * @param Pipeable|null $parent
+     * @return Pipeable
+     * @throws \Exception
+     */
     public function build(?Field $field = null, ?Pipeable $parent = null): Pipeable
     {
         if ($field === null) {
             $field = new Field('$');
         }
 
-        return ($this->builder)($field, $parent);
+        $pipe = new Pipe($field, $parent);
+
+        $section = Base::getSection(Base::name('rule', 'is-list-of'));
+
+        $pipe->add($section, $this->sections);
+
+        return $pipe;
     }
 }
