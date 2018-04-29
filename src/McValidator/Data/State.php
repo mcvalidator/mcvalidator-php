@@ -46,7 +46,11 @@ class State
     public function prefixWith(Field $parent)
     {
         $this->errors = $this->errors->map(function (Error $error) use ($parent) {
-            $errorField = $error->getField();
+            $errorField = $error->getField()->noRoot();
+
+            if ($errorField === null) {
+                return $error->setField($parent);
+            }
 
             $field = $errorField->setParent($parent);
 

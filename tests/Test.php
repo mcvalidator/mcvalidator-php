@@ -277,6 +277,7 @@ YAML;
         $hasHError = $newState->hasError(['h']);
 
         $this->assertTrue($hasBError);
+        $this->assertTrue($hasHError);
 
         // f must not be present in errors because it belongs to
         // [c, d, e]
@@ -285,5 +286,64 @@ YAML;
         $value = $result->get()->all();
 
         $this->assertArraySubset(['a' => 'verylongwo…', 'g' => 10], $value);
+    }
+
+    public function testMore(): void
+    {
+        $yml = <<<YAML
+!shape-of
+a: !shape-of
+  b: filter/to-int
+c: !list-of
+  - !shape-of
+      d: filter/to-int
+e: !list-of
+  - filter/to-int
+f: !shape-of
+  g: !shape-of
+    h: !shape-of
+      i: !shape-of
+        j: filter/to-int
+YAML;
+
+        /** @var MV\Support\Builder $validators */
+        $validators = MV\Parser\Yaml::parseSingle($yml);
+
+        $validator = $validators->build();
+
+        $result = $validator->pump(dict([
+            'a' => dict([
+                'b' => 'hhhhhhhhhh'
+            ]),
+            'c' => seq(dict([
+                'd' => 'hhhhhhhhhhhh'
+            ])),
+            'e' => seq('hhhhhhhhhhhh'),
+            'f' => dict([
+                'g' => dict([
+                    'h' => dict([
+                        'i' => dict([
+                            'j' => 'hhhhhhhhhh'
+                        ])
+                    ])
+                ])
+            ])
+        ]));
+
+        $state = $result->getState();
+
+        $hasAError = $state->hasError(['a', 'b']);
+        $hasCError = $state->hasError(['c', 0, 'd']);
+        $hasEError = $state->hasError(['e', 0]);
+        $hasFError = $state->hasError(['f', 'g', 'h', 'i', 'j']);
+
+        $hasZError = $state->hasError(['a', 'b', 'z']);
+
+        $this->assertTrue($hasAError);
+        $this->assertTrue($hasCError);
+        $this->assertTrue($hasEError);
+        $this->assertTrue($hasFError);
+
+        $this->assertFalse($hasZError);
     }
 }
