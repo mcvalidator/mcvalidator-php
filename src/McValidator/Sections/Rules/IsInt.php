@@ -5,7 +5,6 @@ namespace McValidator\Sections\Rules;
 
 use McValidator\Contracts\Section;
 use McValidator\Data\Capsule;
-use function McValidator\lazydebug;
 
 class IsInt extends Section
 {

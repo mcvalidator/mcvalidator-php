@@ -8,13 +8,11 @@ use Heterogeny\Seq;
 use McValidator\Contracts\Pipeable;
 use McValidator\Contracts\Section;
 use McValidator\Data\Capsule;
-use McValidator\Data\Error;
 use McValidator\Data\Field;
 use McValidator\Data\NonExistentValue;
 use McValidator\Data\OptionsBag;
 use McValidator\Data\State;
 use McValidator\Data\Value;
-use function McValidator\lazydebug;
 use McValidator\Pipe;
 
 class IsShapeOf extends Section
