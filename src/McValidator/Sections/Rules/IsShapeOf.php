@@ -42,9 +42,6 @@ class IsShapeOf extends Section
         /** @var Dict $keys */
         $keys = $capsule->getOptions()->getValue();
 
-        /** @var Pipeable $source */
-        $source = $capsule->getSource();
-
         /** @var State $state */
         $state = $capsule->getState();
 
@@ -61,7 +58,7 @@ class IsShapeOf extends Section
 
         $parentField = $capsule->getField();
 
-        $pipeMap = $keys->map(function ($key, $sections) use ($parentField, $source) {
+        $pipeMap = $keys->map(function ($key, $sections) use ($parentField) {
             if (!is_array($sections)) {
                 $sections = [$sections];
             }
@@ -84,14 +81,18 @@ class IsShapeOf extends Section
             /** @var Value $value */
             $value = $values->getOrElse(
                 $key,
-                new NonExistentValue($innerState)
+                new NonExistentValue($innerState, $capsule->getValue())
             );
 
-            $value = $pipe->pump($value, $innerState);
+            if (!$value instanceof NonExistentValue) {
+                $value = new Value($value, null, $innerState, $capsule->getValue());
+            }
 
-            $result = $result->set($key, $value);
+            $newValue = $pipe->pump($value);
 
-            $innerState = $value->getState();
+            $result = $result->set($key, $newValue);
+
+            $innerState = $newValue->getState();
         }
 
         return $capsule

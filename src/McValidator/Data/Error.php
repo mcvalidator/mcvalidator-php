@@ -72,4 +72,21 @@ final class Error
         $this->section = $section;
         return $this;
     }
+
+    /**
+     * @return mixed[]
+     */
+    public function getPath(): array
+    {
+        return $this->getField()->getPath();
+    }
+
+    /**
+     * @param string $separator
+     * @return mixed[]
+     */
+    public function getStringPath($separator = '/'): string
+    {
+        return join($separator, $this->getField()->getPath());
+    }
 }

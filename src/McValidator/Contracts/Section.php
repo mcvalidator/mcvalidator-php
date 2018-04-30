@@ -70,8 +70,7 @@ abstract class Section
     {
         if ($this->validation) {
             $validator = $this->validation->build(
-                $capsule->getField(),
-                $capsule->getSource()
+                $capsule->getField()
             );
 
             $newValue = $validator->pump(

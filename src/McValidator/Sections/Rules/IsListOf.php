@@ -11,6 +11,7 @@ use McValidator\Data\Field;
 use McValidator\Data\OptionsBag;
 use McValidator\Data\SectionDefinition;
 use McValidator\Data\State;
+use McValidator\Data\Value;
 use McValidator\Pipe;
 use McValidator\Support\Builder;
 
@@ -76,7 +77,9 @@ class IsListOf extends Section
         foreach ($values as $key => $value) {
             $actualField = new Field($key, $parentField);
 
-            $value = $pipe->pump($value, new State());
+            $internalValue = new Value($value, null, new State(), $capsule->getValue());
+
+            $value = $pipe->pump($internalValue);
 
             $listState = $listState->merge(
                 $value

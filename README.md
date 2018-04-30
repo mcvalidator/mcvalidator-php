@@ -12,13 +12,40 @@ use McValidator as MV;
 // too much work.
 $builder = MV\valid('rule/is-string');
 
+// Build the pipe
 $pipe = $builder->build();
 
+// Pump the value through the pipe
+// Result contains the value and also informations about
+// the runtime, such as errors and messages
 $result = $pipe->pump(10);
 
+// Gets the runtime state
 $state = $result->getState();
 
+// Gets the message of the head(first item) of errors
 echo $state->getErrors()->head()->getMessage(); // Value is not a string
+
+// We need more!
+$builder2 = MV\shape_of([
+    'a' => $builder
+]);
+
+$pipe2 = $builder2->build();
+
+$result2 = $pipe2->pump(dict([
+    'a' => 10
+]));
+
+// Gets the runtime state
+$state2 = $result2->getState();
+
+// Gets the message of the head(first item) of errors
+echo $state2->getErrors()->head()->getMessage(); // outputs `Value is not a string`
+
+// Gets the field path of the error!
+echo $state2->getErrors()->head()->getStringPath('/' // <-- separator); // outputs `$/a`
+// `$` means root of path 
 ```
 
 You should be thinking now: this s\*\*t s\*\*ks you loser, it's way too verbose than j**a.
@@ -42,8 +69,9 @@ on PHP, thus respecting the way data should be, arrays being arrays and dictiona
 developing less confusing at least in PHP. **We will not support at any point any way to write a code that
 will mix those structures, do not open an issue or PR about it**.
 - You can validate on the depth of hell, McValidator provides a way to track errors even on nested structures, and when
-we say deep, it's deep, an example of error path: 
+we say deep, it's deep. An example of error path: 
 `a/0/b/1/c`, which means that an error(happened on field `c` , of element `1`, of field `b`, of element `0`, of field `a`),
-this is possible because McValidator is about chains and recursiveness, there's hardcore or such thing in our code.  
+this is possible because McValidator is about chains and recursiveness, there's hardcore or such thing in our code.
+- Immutability is our focus, sanitization or validation will not mutate data that is not on it's reach  
 
 __Performance is not guaranteed at this point.__

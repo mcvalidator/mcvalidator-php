@@ -15,6 +15,7 @@ class IsString extends Section
      */
     protected function receive(Capsule $capsule)
     {
+        $_ = $capsule->getValue();
         if (!is_string($capsule->getValue()->get())) {
             throw new \Exception("Value is not a string");
         }
