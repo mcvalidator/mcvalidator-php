@@ -9,8 +9,8 @@ namespace McValidator\Data;
  */
 class NonExistentValue extends Value
 {
-    public function __construct(?State $state = null)
+    public function __construct(?State $state = null, ?Value $parent = null)
     {
-        parent::__construct(null, null, $state);
+        parent::__construct(null, null, $state, $parent);
     }
 }

@@ -11,12 +11,14 @@ final class Error
     private $message;
     private $field;
     private $section;
+    private $options;
 
-    public function __construct(Field $field, $message, Section $section)
+    public function __construct(Field $field, $message, Section $section, ?OptionsBag $options = null)
     {
         $this->field = $field;
         $this->message = $message;
         $this->section = $section;
+        $this->options = $options;
     }
 
     /**
@@ -71,5 +73,22 @@ final class Error
     {
         $this->section = $section;
         return $this;
+    }
+
+    /**
+     * @return mixed[]
+     */
+    public function getPath(): array
+    {
+        return $this->getField()->getPath();
+    }
+
+    /**
+     * @param string $separator
+     * @return mixed[]
+     */
+    public function getStringPath($separator = '/'): string
+    {
+        return join($separator, $this->getField()->getPath());
     }
 }

@@ -4,17 +4,11 @@
 namespace McValidator\Data;
 
 
-use McValidator\Contracts\Pipeable;
 use McValidator\Contracts\Section;
 use McValidator\Contracts\Splitter;
 
 final class Capsule
 {
-    /**
-     * @var Pipeable
-     */
-    private $source;
-
     /**
      * @var Value
      */
@@ -38,15 +32,12 @@ final class Capsule
     /**
      * Capsule constructor.
      * @param $value Value
-     * @param $source Pipeable
      * @param $field Field
      * @param OptionsBag $options
-     * @param State $state
      */
-    public function __construct($value, $source, $field, OptionsBag $options)
+    public function __construct($value, $field, OptionsBag $options)
     {
         $this->value = $value;
-        $this->source = $source;
         $this->field = $field;
         $this->options = $options;
         $this->state = $value->getState();
@@ -54,7 +45,6 @@ final class Capsule
 
     /**
      * @param Value $value
-     * @param State $state
      * @param Splitter $splitter
      * @return Capsule
      */
@@ -62,7 +52,6 @@ final class Capsule
     {
         return new self(
             $value,
-            $splitter->getPipe(),
             $splitter->getField(),
             $splitter->getOptions()
         );
@@ -83,7 +72,8 @@ final class Capsule
             $this->value = new Value(
                 $value,
                 $this->value,
-                $nextState
+                $nextState,
+                $this->value->getParent()
             );
 
             return $this;
@@ -92,7 +82,8 @@ final class Capsule
         $this->value = new Value(
             $value($this->value->get()),
             $this->value,
-            $nextState
+            $nextState,
+            $this->value->getParent()
         );
 
         return $this;
@@ -108,7 +99,7 @@ final class Capsule
 
     public function exists()
     {
-        return !$this->value->get() instanceof NonExistentValue;
+        return !$this->value instanceof NonExistentValue;
     }
 
     /**
@@ -125,14 +116,6 @@ final class Capsule
     public function getOptions(): OptionsBag
     {
         return $this->options;
-    }
-
-    /**
-     * @return Pipeable
-     */
-    public function getSource(): Pipeable
-    {
-        return $this->source;
     }
 
     /**
@@ -156,9 +139,15 @@ final class Capsule
         return $this;
     }
 
-    public function addError($message, Section $section) {
+    public function addError($message, Section $section, ?OptionsBag $options = null)
+    {
         return $this->setState(
-          $this->state->addError($this->getField(), $message, $section)
+            $this->state->addError(
+                $this->getField(),
+                $message,
+                $section,
+                $options
+            )
         );
     }
 }

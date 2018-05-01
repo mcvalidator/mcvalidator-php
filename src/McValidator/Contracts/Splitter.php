@@ -101,7 +101,8 @@ final class Splitter implements Pumps
             } catch (\Exception $ex) {
                 $capsule = $capsule->addError(
                     $ex->getMessage(),
-                    $this->wrapped
+                    $this->wrapped,
+                    $capsule->getOptions()
                 );
 
                 return $capsule->getValue()->invalid();

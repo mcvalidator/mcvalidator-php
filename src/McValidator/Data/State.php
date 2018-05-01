@@ -24,12 +24,13 @@ class State
         $this->messages = $messages ?? seq();
     }
 
-    public function addError(Field $field, $message, Section $section)
+    public function addError(Field $field, $message, Section $section, ?OptionsBag $options = null)
     {
         $this->errors = $this->errors->append(new Error(
             $field,
             $message,
-            $section
+            $section,
+            $options
         ));
 
         return $this;

@@ -5,7 +5,6 @@ namespace McValidator\Sections\Rules;
 
 use Heterogeny\Dict;
 use Heterogeny\Seq;
-use McValidator\Contracts\Pipeable;
 use McValidator\Contracts\Section;
 use McValidator\Data\Capsule;
 use McValidator\Data\Field;
@@ -17,6 +16,7 @@ use McValidator\Pipe;
 
 class IsShapeOf extends Section
 {
+    protected $required = true;
     /**
      * @param OptionsBag $options
      * @throws \Exception
@@ -42,14 +42,12 @@ class IsShapeOf extends Section
         /** @var Dict $keys */
         $keys = $capsule->getOptions()->getValue();
 
-        /** @var Pipeable $source */
-        $source = $capsule->getSource();
-
         /** @var State $state */
         $state = $capsule->getState();
 
         /** @var Seq $values */
-        $values = $capsule->getValue()->get();
+        $values = $capsule->getValue()->get(false, true, true);
+
         if ($values === null) {
             $values = dict();
         }
@@ -61,7 +59,7 @@ class IsShapeOf extends Section
 
         $parentField = $capsule->getField();
 
-        $pipeMap = $keys->map(function ($key, $sections) use ($parentField, $source) {
+        $pipeMap = $keys->map(function ($key, $sections) use ($parentField) {
             if (!is_array($sections)) {
                 $sections = [$sections];
             }
@@ -84,14 +82,18 @@ class IsShapeOf extends Section
             /** @var Value $value */
             $value = $values->getOrElse(
                 $key,
-                new NonExistentValue($innerState)
+                new NonExistentValue($innerState, $capsule->getValue())
             );
 
-            $value = $pipe->pump($value, $innerState);
+            if (!$value instanceof NonExistentValue) {
+                $value = new Value($value, null, $innerState, $capsule->getValue());
+            }
 
-            $result = $result->set($key, $value);
+            $newValue = $pipe->pump($value);
 
-            $innerState = $value->getState();
+            $result = $result->set($key, $newValue);
+
+            $innerState = $newValue->getState();
         }
 
         return $capsule

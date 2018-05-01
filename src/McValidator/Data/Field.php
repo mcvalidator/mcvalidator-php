@@ -97,4 +97,9 @@ final class Field
     {
         return $this->name === '$';
     }
+
+    public function getStringPath($separator = '/'): string
+    {
+        return join($separator, $this->getPath());
+    }
 }

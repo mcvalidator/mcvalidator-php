@@ -6,8 +6,6 @@ namespace McValidator\Data;
 use Heterogeny\Dict;
 use Heterogeny\Heterogenic;
 use Heterogeny\Seq;
-use McValidator\Contracts\Pipeable;
-use McValidator\Data\State;
 
 class Value
 {
@@ -21,24 +19,30 @@ class Value
     private $state;
 
     /**
+     * @var Value
+     */
+    private $parent;
+
+    /**
      * @param $value
      * @param Value|null $oldValue
-     * @param Pipeable|null $source
      * @param State|null $state
+     * @param Value|null $parent
      */
-    public function __construct($value, $oldValue = null, ?State $state = null)
+    public function __construct($value, $oldValue = null, ?State $state = null, ?Value $parent = null)
     {
         if ($state === null) {
             $state = new State();
         }
 
         if ($oldValue !== null && !$oldValue instanceof Value) {
-            $oldValue = new Value($oldValue, null, $state);
+            $oldValue = new Value($oldValue, null, $state, $parent);
         }
 
         $this->value = $value;
         $this->oldValue = $oldValue;
         $this->state = $state;
+        $this->parent = $parent;
     }
 
     public function get($removeInvalid = true, $keepNulls = false, $keepEmpty = false)
@@ -139,9 +143,59 @@ class Value
         return new InvalidValue($this->value, null, $this->state);
     }
 
-    public static function none(State $state): Value
+    public static function none(State $state, ?Value $parent = null): NonExistentValue
     {
-        return new Value(new NonExistentValue(), null, $state);
+        return new NonExistentValue($state, $parent);
     }
 
+    /**
+     * @return Value
+     */
+    public function getParent(): ?Value
+    {
+        return $this->parent;
+    }
+
+    /**
+     * @return Value
+     */
+    public function getValue()
+    {
+        return $this->value;
+    }
+
+    public function walk($path)
+    {
+        if (!is_array($path)) {
+            $path = explode('/', $path);
+        }
+
+        $current = $this->parent;
+        $value = Value::none($this->state, $this->parent);
+
+        foreach ($path as $segment) {
+            if ($current === null) break;
+
+            if ($segment === '..') {
+                $current = $current->getParent();
+            } else {
+                $possibleValue = $current->getValue();
+                if ($possibleValue !== null) {
+                    if ($possibleValue instanceof Heterogenic) {
+                        $value = $possibleValue->getOrElse($segment, Value::none($this->state, $current));
+                    }
+                }
+            }
+        }
+
+        if ($current === null) {
+            return Value::none($this->state, $this);
+        }
+
+        if ($value instanceof NonExistentValue) {
+            return $value;
+        }
+
+        return new Value($value, null, $this->state, $current);
+    }
 }
