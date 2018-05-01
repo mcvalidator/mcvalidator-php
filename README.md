@@ -72,6 +72,18 @@ will mix those structures, do not open an issue or PR about it**.
 we say deep, it's deep. An example of error path: 
 `a/0/b/1/c`, which means that an error(happened on field `c` , of element `1`, of field `b`, of element `0`, of field `a`),
 this is possible because McValidator is about chains and recursiveness, there's hardcore or such thing in our code.
-- Immutability is our focus, sanitization or validation will not mutate data that is not on it's reach  
+- Immutability is our focus, sanitization or validation will not mutate data that is not on it's reach
+
+### Value's type table
+
+|         | `NonExistentValue` | `ExplicitNonExistentValue` | `InvalidValue` |
+| ---     | ---                | ---                        | ---            |
+| isValid | `false`            | `true`                     | `false`        | 
+| exists  | `false`            | `false`                    | `true`         |
+
+
+- `NonExistentValue`: a value that was not sent and does not exists, example: a key configured for a shape that was not "pumped"
+- `ExplicitNonExistentValue`: a value that was sent explicitly `null`, example: a key configured for a shape that was "pumped" `null`
+- `InvalidValue`: an invalid value which source is sections, example: a value that was sent and reported invalid in sections
 
 __Performance is not guaranteed at this point.__

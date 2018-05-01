@@ -203,4 +203,9 @@ class Value
     {
         return true;
     }
+
+    public function exists()
+    {
+        return true;
+    }
 }

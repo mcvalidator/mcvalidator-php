@@ -76,7 +76,7 @@ abstract class Section
     {
         $value = $capsule->getValue();
 
-        if ($value instanceof NonExistentValue && !$this->required) {
+        if ($value->exists() && !$this->required) {
             return $capsule;
         }
 
@@ -90,13 +90,8 @@ abstract class Section
                 $capsule->getState()
             );
 
-            if ($newValue instanceof InvalidValue) {
-                return $capsule
-                    ->newValue($newValue);
-            } else {
-                $capsule = $capsule
-                    ->newValue($newValue);
-            }
+            return $capsule
+                ->newValue($newValue);
         }
 
         return $this->receive($capsule);

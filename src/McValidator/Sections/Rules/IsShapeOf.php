@@ -7,6 +7,7 @@ use Heterogeny\Dict;
 use Heterogeny\Seq;
 use McValidator\Contracts\Section;
 use McValidator\Data\Capsule;
+use McValidator\Data\ExplicitNonExistentValue;
 use McValidator\Data\Field;
 use McValidator\Data\NonExistentValue;
 use McValidator\Data\OptionsBag;
@@ -85,7 +86,11 @@ class IsShapeOf extends Section
                 new NonExistentValue($innerState, $capsule->getValue())
             );
 
-            if (!$value instanceof NonExistentValue) {
+            if ($value === null) {
+                $value = new ExplicitNonExistentValue($innerState, $capsule->getValue());
+            }
+
+            if (!$value instanceof Value) {
                 $value = new Value($value, null, $innerState, $capsule->getValue());
             }
 
