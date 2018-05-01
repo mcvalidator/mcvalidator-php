@@ -198,4 +198,9 @@ class Value
 
         return new Value($value, null, $this->state, $current);
     }
+
+    public function isValid()
+    {
+        return true;
+    }
 }

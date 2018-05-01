@@ -13,4 +13,9 @@ class NonExistentValue extends Value
     {
         parent::__construct(null, null, $state, $parent);
     }
+
+    public function isValid()
+    {
+        return false;
+    }
 }
