@@ -99,7 +99,7 @@ final class Capsule
 
     public function exists()
     {
-        return !$this->value instanceof NonExistentValue;
+        return $this->value->isValid();
     }
 
     /**

@@ -9,4 +9,9 @@ namespace McValidator\Data;
  * @package McValidator\Data
  */
 class InvalidValue extends Value
-{}
+{
+    public function isValid()
+    {
+        return false;
+    }
+}
