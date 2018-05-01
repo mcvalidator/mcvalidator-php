@@ -76,7 +76,7 @@ abstract class Section
     {
         $value = $capsule->getValue();
 
-        if ($value->exists() && !$this->required) {
+        if (!$value->exists() && !$this->required) {
             return $capsule;
         }
 
