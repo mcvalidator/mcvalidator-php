@@ -5,6 +5,7 @@ namespace McValidator\Contracts;
 
 use McValidator\Data\Capsule;
 use McValidator\Data\InvalidValue;
+use McValidator\Data\NonExistentValue;
 use McValidator\Data\OptionsBag;
 use McValidator\Data\SectionDefinition;
 use McValidator\Data\State;
@@ -16,6 +17,11 @@ abstract class Section
      * @var string
      */
     protected $identifier;
+
+    /**
+     * @var boolean
+     */
+    protected $required;
 
     /**
      * @var Builder
@@ -68,13 +74,19 @@ abstract class Section
      */
     public function evaluate(Capsule $capsule)
     {
+        $value = $capsule->getValue();
+
+        if ($value instanceof NonExistentValue && !$this->required) {
+            return $capsule;
+        }
+
         if ($this->validation) {
             $validator = $this->validation->build(
                 $capsule->getField()
             );
 
             $newValue = $validator->pump(
-                $capsule->getValue(),
+                $value,
                 $capsule->getState()
             );
 

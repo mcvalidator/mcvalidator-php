@@ -5,7 +5,6 @@ namespace McValidator\Sections\Rules;
 
 use Heterogeny\Dict;
 use Heterogeny\Seq;
-use McValidator\Contracts\Pipeable;
 use McValidator\Contracts\Section;
 use McValidator\Data\Capsule;
 use McValidator\Data\Field;
@@ -17,6 +16,7 @@ use McValidator\Pipe;
 
 class IsShapeOf extends Section
 {
+    protected $required = true;
     /**
      * @param OptionsBag $options
      * @throws \Exception
@@ -46,7 +46,8 @@ class IsShapeOf extends Section
         $state = $capsule->getState();
 
         /** @var Seq $values */
-        $values = $capsule->getValue()->get();
+        $values = $capsule->getValue()->get(false, true, true);
+
         if ($values === null) {
             $values = dict();
         }

@@ -11,12 +11,14 @@ final class Error
     private $message;
     private $field;
     private $section;
+    private $options;
 
-    public function __construct(Field $field, $message, Section $section)
+    public function __construct(Field $field, $message, Section $section, ?OptionsBag $options = null)
     {
         $this->field = $field;
         $this->message = $message;
         $this->section = $section;
+        $this->options = $options;
     }
 
     /**

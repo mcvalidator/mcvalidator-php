@@ -155,4 +155,47 @@ class Value
     {
         return $this->parent;
     }
+
+    /**
+     * @return Value
+     */
+    public function getValue()
+    {
+        return $this->value;
+    }
+
+    public function walk($path)
+    {
+        if (!is_array($path)) {
+            $path = explode('/', $path);
+        }
+
+        $current = $this->parent;
+        $value = Value::none($this->state, $this->parent);
+
+        foreach ($path as $segment) {
+            if ($current === null) break;
+
+            if ($segment === '..') {
+                $current = $current->getParent();
+            } else {
+                $possibleValue = $current->getValue();
+                if ($possibleValue !== null) {
+                    if ($possibleValue instanceof Heterogenic) {
+                        $value = $possibleValue->getOrElse($segment, Value::none($this->state, $current));
+                    }
+                }
+            }
+        }
+
+        if ($current === null) {
+            return Value::none($this->state, $this);
+        }
+
+        if ($value instanceof NonExistentValue) {
+            return $value;
+        }
+
+        return new Value($value, null, $this->state, $current);
+    }
 }

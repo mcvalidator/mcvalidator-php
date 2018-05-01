@@ -4,7 +4,6 @@
 namespace McValidator\Data;
 
 
-use McValidator\Contracts\Pipeable;
 use McValidator\Contracts\Section;
 use McValidator\Contracts\Splitter;
 
@@ -140,9 +139,15 @@ final class Capsule
         return $this;
     }
 
-    public function addError($message, Section $section) {
+    public function addError($message, Section $section, ?OptionsBag $options = null)
+    {
         return $this->setState(
-          $this->state->addError($this->getField(), $message, $section)
+            $this->state->addError(
+                $this->getField(),
+                $message,
+                $section,
+                $options
+            )
         );
     }
 }

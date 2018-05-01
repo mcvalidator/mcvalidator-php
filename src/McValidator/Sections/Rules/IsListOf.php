@@ -4,7 +4,6 @@
 namespace McValidator\Sections\Rules;
 
 use Heterogeny\Seq;
-use McValidator\Contracts\Pipeable;
 use McValidator\Contracts\Section;
 use McValidator\Data\Capsule;
 use McValidator\Data\Field;
@@ -17,6 +16,8 @@ use McValidator\Support\Builder;
 
 class IsListOf extends Section
 {
+    protected $required = true;
+
     /**
      * @param OptionsBag $options
      * @throws \Exception
