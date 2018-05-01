@@ -4,21 +4,18 @@
 namespace McValidator\Data;
 
 /**
- * Representation of a non existent value, so null values will not be confused with "undefined"
+ * Representation of a explicit non existent value(a value that was sent null),
+ * so null values will not be confused with "undefined"
+ *
  * @package McValidator\Data
  */
-class NonExistentValue extends Value
+class ExplicitNonExistentValue extends Value
 {
     public function __construct(?State $state = null, ?Value $parent = null)
     {
         parent::__construct(null, null, $state, $parent);
     }
 
-    public function isValid()
-    {
-        return false;
-    }
-    
     public function exists()
     {
         return false;
