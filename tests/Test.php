@@ -346,4 +346,30 @@ YAML;
 
         $this->assertFalse($hasZError);
     }
+
+    public function testIsFilled(): void
+    {
+        $builder = MV\shape_of([
+            'a' => MV\shape_of([
+                'b' => MV\shape_of([
+                    'c' => MV\shape_of([
+                        'd' => MV\shape_of([
+                            'e' => MV\shape_of([
+                                'f' => MV\valid(
+                                    'rule/is-int',
+                                    'rule/is-filled'
+                                )
+                            ])
+                        ])
+                    ])
+                ])
+            ])
+        ]);
+
+        $validator = $builder->build();
+
+        $x = $validator->pump(dict([]));
+
+        $this->assertTrue($x->getState()->hasError(['a', 'b', 'c', 'd', 'e', 'f']));
+    }
 }
