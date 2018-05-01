@@ -372,4 +372,47 @@ YAML;
 
         $this->assertTrue($x->getState()->hasError(['a', 'b', 'c', 'd', 'e', 'f']));
     }
+
+    public function testMultipleErrors(): void
+    {
+        $builder = MV\shape_of([
+            'a' => MV\valid(
+                'rule/is-int',
+                'rule/is-filled'
+            ),
+            'b' => MV\valid(
+                'rule/is-int',
+                'rule/is-filled'
+            ),
+            'c' => MV\valid(
+                'rule/is-int',
+                'rule/is-filled'
+            ),
+            'd' => MV\valid(
+                'rule/is-int',
+                'rule/is-filled'
+            ),
+            'e' => MV\valid(
+                'rule/is-int',
+                'rule/is-filled'
+            ),
+            'f' => MV\valid(
+                'rule/is-int',
+                'rule/is-filled'
+            )
+        ]);
+
+        $validator = $builder->build();
+
+        $x = $validator->pump(dict([
+            'f' => 10
+        ]));
+
+        $this->assertTrue($x->getState()->hasError(['a']));
+        $this->assertTrue($x->getState()->hasError(['b']));
+        $this->assertTrue($x->getState()->hasError(['c']));
+        $this->assertTrue($x->getState()->hasError(['d']));
+        $this->assertTrue($x->getState()->hasError(['e']));
+        $this->assertFalse($x->getState()->hasError(['f']));
+    }
 }
