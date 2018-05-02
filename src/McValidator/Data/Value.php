@@ -45,50 +45,95 @@ class Value
         $this->parent = $parent;
     }
 
-    public function get($removeInvalid = true, $keepNulls = false, $keepEmpty = false)
+    public function getWithEverything()
+    {
+        return $this->get(false, true, true);
+    }
+
+    /**
+     * Get all values with sent nulls
+     *
+     * @param bool $removeInvalid
+     * @param bool $keepEmpty
+     * @return Dict|Seq|null
+     */
+    public function getWithNulls($removeInvalid = true, $keepEmpty = false, $keepOriginalNulls = false)
+    {
+        return $this->get($removeInvalid, true, $keepEmpty);
+    }
+
+    public function get($removeInvalid = true, $keepNulls = false, $keepEmpty = false, $keepOriginalNulls = false)
     {
         if ($this instanceof InvalidValue && $removeInvalid) {
             return null;
         }
 
         if ($this->value instanceof Seq) {
-            return $this->value->map(function ($value) use ($removeInvalid, $keepNulls, $keepEmpty) {
-                if ($value instanceof Value) {
-                    return $value->get($removeInvalid, $keepNulls, $keepEmpty);
-                }
+            return $this->value
+                ->map(function ($value) use ($removeInvalid, $keepNulls, $keepEmpty) {
+                    if ($value instanceof Value) {
+                        return [$value, $value->get($removeInvalid, $keepNulls, $keepEmpty)];
+                    }
 
-                return $value;
-            })->filter(function ($value) use ($keepNulls, $keepEmpty) {
-                if ($value instanceof Heterogenic) {
-                    return $keepEmpty || !$value->isEmpty();
-                }
+                    return [$value, $value];
+                })
+                ->filter(function ($tuple) use ($keepNulls, $keepEmpty) {
+                    list($original, $value) = $tuple;
 
-                if ($keepNulls) {
-                    return true;
-                }
+                    // if it's a Heterogenic then check if is empty when $keepEmpty
+                    if ($value instanceof Heterogenic) {
+                        return $keepEmpty || !$value->isEmpty();
+                    }
 
-                return $value !== null;
-            });
+                    // if it's a ExplicitNonExistentValue keep it
+                    if ($original instanceof ExplicitNonExistentValue) {
+                        return true;
+                    }
+
+                    // if it's a NonExistentValue keep only when $keepNulls is true
+                    if ($original instanceof NonExistentValue && $keepNulls) {
+                        return true;
+                    }
+
+                    return $value !== null;
+                })
+                ->map(function ($tuple) {
+                    return $tuple[1];
+                });
         }
 
         if ($this->value instanceof Dict) {
-            return $this->value->map(function ($key, $value) use ($removeInvalid, $keepNulls, $keepEmpty) {
-                if ($value instanceof Value) {
-                    return $value->get($removeInvalid, $keepNulls, $keepEmpty);
-                }
+            return $this->value
+                ->map(function ($key, $value) use ($removeInvalid, $keepNulls, $keepEmpty) {
+                    if ($value instanceof Value) {
+                        return [$value, $value->get($removeInvalid, $keepNulls, $keepEmpty)];
+                    }
 
-                return $value;
-            })->filter(function ($key, $value) use ($keepNulls, $keepEmpty) {
-                if ($value instanceof Heterogenic) {
-                    return $keepEmpty || !$value->isEmpty();
-                }
+                    return [$value, $value];
+                })
+                ->filter(function ($key, $tuple) use ($keepNulls, $keepEmpty) {
+                    list($original, $value) = $tuple;
 
-                if ($keepNulls) {
-                    return true;
-                }
+                    // if it's a Heterogenic then check if is empty when $keepEmpty
+                    if ($value instanceof Heterogenic) {
+                        return $keepEmpty || !$value->isEmpty();
+                    }
 
-                return $value !== null;
-            });
+                    // if it's a ExplicitNonExistentValue keep it
+                    if ($original instanceof ExplicitNonExistentValue) {
+                        return true;
+                    }
+
+                    // if it's a NonExistentValue keep only when $keepNulls is true
+                    if ($original instanceof NonExistentValue && $keepNulls) {
+                        return true;
+                    }
+
+                    return $value !== null;
+                })
+                ->map(function ($key, $tuple) {
+                    return $tuple[1];
+                });
         }
 
 
@@ -207,5 +252,10 @@ class Value
     public function exists()
     {
         return true;
+    }
+
+    public function getRawValue()
+    {
+        return $this->value;
     }
 }

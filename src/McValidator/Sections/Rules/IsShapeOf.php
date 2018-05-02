@@ -47,7 +47,9 @@ class IsShapeOf extends Section
         $state = $capsule->getState();
 
         /** @var Seq $values */
-        $values = $capsule->getValue()->get(false, true, true);
+        $values = $capsule
+            ->getValue()
+            ->getRawValue();
 
         if ($values === null) {
             $values = dict();
