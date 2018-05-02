@@ -1,6 +1,7 @@
 <?php
 
 use McValidator as MV;
+use PHPUnit\Framework\Constraint\IsType;
 use PHPUnit\Framework\TestCase;
 
 class Test extends TestCase
@@ -430,6 +431,11 @@ YAML;
 
         $y = $x->get();
 
-        $this->assertEquals(1000000, $y->get('a'));
+        $v = $y->get('a');
+
+        $this->assertThat($v, $this->logicalAnd(
+            $this->isType('int'),
+            $this->greaterThan(0)
+        ));
     }
 }

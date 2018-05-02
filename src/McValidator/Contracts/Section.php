@@ -90,7 +90,7 @@ abstract class Section
                 $capsule->getState()
             );
 
-            if ($newValue->isValid()) {
+            if (!$newValue->isValid()) {
                 return $capsule
                     ->newValue($newValue);
             } else {
