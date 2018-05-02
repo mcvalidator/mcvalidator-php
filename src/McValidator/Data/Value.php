@@ -57,12 +57,12 @@ class Value
      * @param bool $keepEmpty
      * @return Dict|Seq|null
      */
-    public function getWithNulls($removeInvalid = true, $keepEmpty = false, $keepOriginalNulls = false)
+    public function getWithNulls($removeInvalid = true, $keepEmpty = false)
     {
         return $this->get($removeInvalid, true, $keepEmpty);
     }
 
-    public function get($removeInvalid = true, $keepNulls = false, $keepEmpty = false, $keepOriginalNulls = false)
+    public function get($removeInvalid = true, $keepNulls = false, $keepEmpty = false)
     {
         if ($this instanceof InvalidValue && $removeInvalid) {
             return null;
