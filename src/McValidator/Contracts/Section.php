@@ -90,8 +90,13 @@ abstract class Section
                 $capsule->getState()
             );
 
-            return $capsule
-                ->newValue($newValue);
+            if ($newValue->isValid()) {
+                return $capsule
+                    ->newValue($newValue);
+            } else {
+                $capsule = $capsule
+                    ->newValue($newValue);
+            }
         }
 
         return $this->receive($capsule);
