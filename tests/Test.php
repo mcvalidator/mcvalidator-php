@@ -415,4 +415,21 @@ YAML;
         $this->assertTrue($x->getState()->hasError(['e']));
         $this->assertFalse($x->getState()->hasError(['f']));
     }
+
+    public function testToInt(): void
+    {
+        $builder = MV\shape_of([
+            'a' => MV\valid('filter/to-int')
+        ]);
+
+        $validator = $builder->build();
+
+        $x = $validator->pump(dict([
+            'a' => '1000000'
+        ]));
+
+        $y = $x->get();
+
+        $this->assertEquals(1000000, $y->get('a'));
+    }
 }
