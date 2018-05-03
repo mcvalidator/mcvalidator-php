@@ -438,4 +438,42 @@ YAML;
             $this->greaterThan(0)
         ));
     }
+
+    public function testNullableNested(): void
+    {
+        $builder = MV\shape_of([
+            'a' => MV\nullable_shape_of([
+                'b' => MV\valid('rule/is-filled', 'filter/to-int')
+            ])
+        ]);
+
+        $validator = $builder->build();
+
+        $result = $validator->pump(dict([
+            'a' => null
+        ]));
+
+        $errors = $result->getState()->getErrors();
+
+        $this->assertEmpty($errors);
+    }
+
+    public function testNullableNested2(): void
+    {
+        $builder = MV\shape_of([
+            'a' => MV\nullable_shape_of([
+                'b' => MV\valid('rule/is-filled', 'filter/to-int')
+            ])
+        ]);
+
+        $validator = $builder->build();
+
+        $result = $validator->pump(dict([
+            'a' => dict([])
+        ]));
+
+        $errors = $result->getState()->getErrors();
+
+        $this->assertNotEmpty($errors);
+    }
 }

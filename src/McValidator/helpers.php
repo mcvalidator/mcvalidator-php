@@ -4,6 +4,7 @@ namespace McValidator;
 
 use McValidator\Data\SectionDefinition;
 use McValidator\Support\ListOf;
+use McValidator\Support\NullableShapeOf;
 use McValidator\Support\ShapeOf;
 use McValidator\Support\Valid;
 
@@ -17,6 +18,19 @@ if (!function_exists('shape_of')) {
     function shape_of(array $options, ...$sections)
     {
         return ShapeOf::build(dict($options), ...$sections);
+    }
+}
+
+if (!function_exists('nullable_shape_of')) {
+    /**
+     * @param array $options
+     * @param mixed ...$sections
+     * @return Support\Builder|Support\NullableShapeOfBuilder
+     * @throws \Exception
+     */
+    function nullable_shape_of(array $options, ...$sections)
+    {
+        return NullableShapeOf::build(dict($options), ...$sections);
     }
 }
 
