@@ -60,6 +60,8 @@ class Yaml
                     return self::extractList($current->getValue());
                 case 'shape-of':
                     return self::extractShape($current->getValue());
+                case 'nullable-shape-of':
+                    return self::extractNullableShape($current->getValue());
                 case 'root':
                     $v = $current->getValue();
                     if (!key_exists('root', $v)) {
@@ -121,6 +123,37 @@ class Yaml
         }
 
         return \McValidator\Support\ShapeOf::build($result, ...$options);
+    }
+
+
+
+    private static function extractNullableShape($value)
+    {
+        if (!is_object($value)) {
+            $value = (object)$value;
+        }
+
+        $result = dict();
+
+        foreach ((array)$value as $k => $v) {
+            if (substr($k, 0, 1) === '^' || $k === '_') continue;
+            $result = $result->set($k, self::extract($v));
+        }
+
+        $options = [];
+
+        if (property_exists($value, '_')) {
+            $o = $value->_;
+
+            // wraps into an array so extract can distinct it, else, extract will treat as simple options
+            if (!is_array($o)) {
+                $o = [$o];
+            }
+
+            $options = [self::extract($o)];
+        }
+
+        return \McValidator\Support\NullableShapeOf::build($result, ...$options);
     }
 
     private static function extractList($value)
