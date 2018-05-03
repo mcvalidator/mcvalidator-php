@@ -17,7 +17,9 @@ class IsFilled extends Section
      */
     protected function receive(Capsule $capsule)
     {
-        if (!$capsule->exists()) {
+        $value = $capsule->getValue();
+
+        if (!$value->exists() || !$value->isValid()) {
             throw new \Exception(
                 "Could not ensure that `{$capsule->getField()->getStringPath()}` is filled"
             );
